@@ -1,0 +1,14 @@
+OCR DEBUG FILE
+===============
+Source File: test_files\sample.txt
+OCR Type: test_ocr
+Timestamp: 2025-07-25T14:07:04.723570
+Text Length: 129 characters
+
+EXTRACTED TEXT:
+--------------------------------------------------
+This is sample OCR extracted text.
+It contains multiple lines and special characters: áéíóú
+Numbers: 123456789
+Symbols: @#$%^&*()
+--------------------------------------------------

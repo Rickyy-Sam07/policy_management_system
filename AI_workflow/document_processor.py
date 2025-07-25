@@ -9,6 +9,8 @@ from typing import Optional, Dict, Any, List, Union
 from pathlib import Path
 from dataclasses import dataclass
 from enum import Enum
+import time
+from datetime import datetime
 
 from document_detector import DocumentTypeDetector, DocumentType, DetectionResult
 from parsers.pdf_parser import PDFParser, parse_pdf
@@ -44,16 +46,23 @@ class DocumentProcessor:
     Central document processor that coordinates detection and parsing.
     """
     
-    def __init__(self, ocr_lang: str = 'en', prefer_paddle_ocr: bool = True):
+    def __init__(self, ocr_lang: str = 'en', prefer_paddle_ocr: bool = True, save_ocr_debug: bool = True):
         """
         Initialize document processor.
         
         Args:
             ocr_lang: Language for OCR processing
             prefer_paddle_ocr: Whether to prefer PaddleOCR over Tesseract
+            save_ocr_debug: Whether to save OCR text to debug files (development)
         """
         self.ocr_lang = ocr_lang
         self.prefer_paddle_ocr = prefer_paddle_ocr
+        self.save_ocr_debug = save_ocr_debug
+        
+        # Create debug directory if needed
+        if self.save_ocr_debug:
+            self.debug_dir = Path("ocr_debug")
+            self.debug_dir.mkdir(exist_ok=True)
         
         # Initialize components
         self.detector = DocumentTypeDetector()
@@ -64,7 +73,7 @@ class DocumentProcessor:
         self._email_parser = None
         self._ocr_parser = None
         
-        logger.info("Document Processor initialized")
+        logger.info(f"Document Processor initialized (OCR debug: {self.save_ocr_debug})")
     
     @property
     def pdf_parser(self) -> PDFParser:
@@ -97,6 +106,17 @@ class DocumentProcessor:
             )
         return self._ocr_parser
     
+    def _save_ocr_debug(self, ocr_text: str, source_file: Path, ocr_type: str = "general") -> Optional[Path]:
+        if not self.save_ocr_debug or not ocr_text.strip():
+            return None
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            debug_path = self.debug_dir / f"{source_file.stem}_{ocr_type}_{timestamp}.txt"
+            debug_path.write_text(ocr_text, encoding='utf-8')
+            return debug_path
+        except Exception:
+            return None
+    
     def process_document(self, file_path: Union[str, Path]) -> DocumentProcessingResult:
         """
         Process a document through the complete pipeline.
@@ -107,27 +127,33 @@ class DocumentProcessor:
         Returns:
             DocumentProcessingResult with comprehensive processing information
         """
-        import time
         start_time = time.time()
         
         file_path = Path(file_path)
         logger.info(f"Processing document: {file_path}")
+        print(f"Starting processing: {file_path.name}")
         
         try:
             # Step 1: Detect document type
+            detection_start = time.time()
             detection_result = self.detector.detect_document_type(file_path)
+            detection_time = time.time() - detection_start
+            print(f"Detection completed in {detection_time:.3f}s - Type: {detection_result.metadata.source_type if detection_result.success else 'FAILED'}")
             
             if not detection_result.success:
+                total_time = time.time() - start_time
+                print(f"Processing failed in {total_time:.3f}s - Detection error")
                 return DocumentProcessingResult(
                     detection_result=detection_result,
                     parsing_success=False,
                     extracted_text="",
                     parser_used="none",
-                    processing_time=time.time() - start_time,
+                    processing_time=total_time,
                     error_message=detection_result.metadata.error_message
                 )
             
             # Step 2: Route to appropriate parser
+            parsing_start = time.time()
             doc_type = detection_result.metadata.source_type
             
             if doc_type == DocumentType.PDF:
@@ -149,7 +175,18 @@ class DocumentProcessor:
                     error_message=f"Unsupported document type: {doc_type}"
                 )
             
+            parsing_time = time.time() - parsing_start
             result.processing_time = time.time() - start_time
+            
+            # Print timing summary
+            print(f"Parsing completed in {parsing_time:.3f}s - Parser: {result.parser_used}")
+            print(f"Total processing time: {result.processing_time:.3f}s")
+            print(f"Extracted text: {len(result.extracted_text)} characters")
+            if result.parsing_success:
+                print(f"Confidence: {result.confidence_score:.2f}")
+            else:
+                print(f"Error: {result.error_message}")
+            
             logger.info(f"Document processing completed in {result.processing_time:.2f}s")
             return result
             
@@ -192,10 +229,21 @@ class DocumentProcessor:
             # Check if OCR is needed
             if pdf_result.needs_ocr:
                 logger.info("PDF needs OCR, rendering pages as images and processing")
+                print("PDF requires OCR - rendering pages as images...")
                 
                 # Render PDF pages as images for OCR
+                render_start = time.time()
                 page_images = self.pdf_parser.render_pages_as_images(file_path, dpi=200)
+                render_time = time.time() - render_start
+                print(f"Page rendering completed in {render_time:.3f}s - {len(page_images)} pages")
+                
+                # OCR the rendered pages
+                ocr_start = time.time()
                 ocr_text = self._ocr_pdf_pages(page_images)
+                ocr_time = time.time() - ocr_start
+                print(f"OCR processing completed in {ocr_time:.3f}s - {len(ocr_text)} characters")
+                
+                self._save_ocr_debug(ocr_text, file_path, "pdf_pages")
                 
                 # Combine original text (if any) with OCR results
                 combined_text = pdf_result.text_content
@@ -261,7 +309,14 @@ class DocumentProcessor:
             if docx_result.embedded_images and (needs_ocr or len(docx_result.embedded_images) > 0):
                 logger.info(f"Processing {len(docx_result.embedded_images)} embedded images with OCR "
                            f"(OCR fallback needed: {needs_ocr})")
+                print(f"Processing {len(docx_result.embedded_images)} embedded images with OCR...")
+                
+                ocr_start = time.time()
                 ocr_text = self._ocr_embedded_images(docx_result.embedded_images)
+                ocr_time = time.time() - ocr_start
+                print(f"DOCX OCR completed in {ocr_time:.3f}s - {len(ocr_text)} characters")
+                
+                self._save_ocr_debug(ocr_text, file_path, "docx_images")
             
             # Combine text and OCR results
             combined_text = docx_result.text_content
@@ -320,6 +375,7 @@ class DocumentProcessor:
             
             if email_result.attachments:
                 logger.info(f"Processing {len(email_result.attachments)} email attachments")
+                print(f"Processing {len(email_result.attachments)} email attachments...")
                 
                 for i, attachment in enumerate(email_result.attachments):
                     try:
@@ -336,10 +392,14 @@ class DocumentProcessor:
                             # Check if attachment is an image for direct OCR
                             if attachment.content_type.startswith('image/'):
                                 logger.debug(f"Processing image attachment: {attachment.filename}")
+                                print(f"OCR processing image: {attachment.filename}")
                                 try:
                                     ocr_result = self.ocr_parser.parse_image(temp_file, preprocess=True)
                                     if ocr_result.text_content.strip():
-                                        attachment_texts.append(f"--- {attachment.filename} (OCR) ---\n{ocr_result.text_content}")
+                                        attachment_text = f"--- {attachment.filename} (OCR) ---\n{ocr_result.text_content}"
+                                        attachment_texts.append(attachment_text)
+                                        
+                                        self._save_ocr_debug(ocr_result.text_content, file_path, "email_attachment")
                                         
                                         processed_attachments.append({
                                             "filename": attachment.filename,
@@ -429,7 +489,13 @@ class DocumentProcessor:
     def _process_image(self, file_path: Path, detection_result: DetectionResult) -> DocumentProcessingResult:
         """Process image document with OCR."""
         try:
+            print(f"Processing image with OCR: {file_path.name}")
+            ocr_start = time.time()
             ocr_result = self.ocr_parser.parse_image(file_path, preprocess=True)
+            ocr_time = time.time() - ocr_start
+            print(f"Image OCR completed in {ocr_time:.3f}s - {len(ocr_result.text_content)} characters")
+            
+            self._save_ocr_debug(ocr_result.text_content, file_path, "image_direct")
             
             return DocumentProcessingResult(
                 detection_result=detection_result,
@@ -531,47 +597,23 @@ class DocumentProcessor:
                 error_message=str(e)
             )
     
-    def _ocr_pdf_images(self, pdf_path: Path, images: List[Dict[str, Any]]) -> str:
-        """
-        OCR extracted images from PDF (legacy method).
-        
-        Args:
-            pdf_path: Path to the PDF file
-            images: List of image metadata from PDF
-            
-        Returns:
-            Combined OCR text from extracted images
-        """
-        # This method is kept for compatibility but page rendering is preferred
-        logger.info(f"Using legacy image extraction OCR for {len(images)} images")
-        return ""
+
     
     def _ocr_embedded_images(self, embedded_images: List[Any]) -> str:
-        """OCR embedded images from DOCX."""
         ocr_texts = []
-        
         for i, image in enumerate(embedded_images):
             try:
                 if hasattr(image, 'data') and image.data:
-                    # Create temporary file for OCR
                     import tempfile
                     with tempfile.NamedTemporaryFile(suffix=f'.{image.format}', delete=False) as temp_file:
                         temp_file.write(image.data)
                         temp_path = Path(temp_file.name)
-                    
-                    # Run OCR
                     ocr_result = self.ocr_parser.parse_image(temp_path, preprocess=True)
-                    
                     if ocr_result.text_content.strip():
-                        ocr_texts.append(f"Image {i+1} ({image.name}): {ocr_result.text_content}")
-                    
-                    # Clean up
+                        ocr_texts.append(ocr_result.text_content)
                     temp_path.unlink(missing_ok=True)
-            
-            except Exception as e:
-                logger.warning(f"Failed to OCR embedded image {i}: {e}")
+            except Exception:
                 continue
-        
         return "\n\n".join(ocr_texts)
     
     def batch_process(self, file_paths: List[Union[str, Path]]) -> List[DocumentProcessingResult]:
@@ -614,18 +656,19 @@ class DocumentProcessor:
 
 
 # Convenience function for quick processing
-def process_document(file_path: Union[str, Path], ocr_lang: str = 'en') -> DocumentProcessingResult:
+def process_document(file_path: Union[str, Path], ocr_lang: str = 'en', save_ocr_debug: bool = True) -> DocumentProcessingResult:
     """
     Quick function to process a document.
     
     Args:
         file_path: Path to the document
         ocr_lang: Language for OCR processing
+        save_ocr_debug: Whether to save OCR text to debug files
         
     Returns:
         DocumentProcessingResult with processing information
     """
-    processor = DocumentProcessor(ocr_lang=ocr_lang)
+    processor = DocumentProcessor(ocr_lang=ocr_lang, save_ocr_debug=save_ocr_debug)
     return processor.process_document(file_path)
 
 
@@ -636,23 +679,45 @@ if __name__ == "__main__":
     
     if len(sys.argv) > 1:
         file_path = sys.argv[1]
-        result = process_document(file_path)
         
-        # Print summary
-        print(f"Document: {file_path}")
+        print(f"\nDocument Processing System - Development Mode")
+        print(f"Processing: {file_path}")
+        print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 60)
+        
+        overall_start = time.time()
+        result = process_document(file_path, save_ocr_debug=True)
+        overall_time = time.time() - overall_start
+        
+        print("=" * 60)
+        print(f"PROCESSING SUMMARY")
+        print(f"File: {file_path}")
         print(f"Type: {result.detection_result.metadata.source_type if result.detection_result else 'Unknown'}")
-        print(f"Success: {result.parsing_success}")
+        print(f"Success: {'SUCCESS' if result.parsing_success else 'FAILED'}")
         print(f"Parser: {result.parser_used}")
         print(f"Confidence: {result.confidence_score:.2f}")
-        print(f"Processing Time: {result.processing_time:.2f}s")
-        print(f"Text Length: {len(result.extracted_text)} characters")
+        print(f"Processing Time: {result.processing_time:.3f}s")
+        print(f"Overall Time: {overall_time:.3f}s")
+        print(f"Text Length: {len(result.extracted_text):,} characters")
         
         if result.error_message:
             print(f"Error: {result.error_message}")
         
-        # Show first 200 characters of extracted text
+        # Show metadata if available
+        if result.metadata:
+            print(f"\nMetadata: {json.dumps(result.metadata, indent=2, default=str)}")
+        
+        # Show first 300 characters of extracted text
         if result.extracted_text:
-            print("\nExtracted Text (preview):")
-            print(result.extracted_text[:200] + "..." if len(result.extracted_text) > 200 else result.extracted_text)
+            print(f"\nExtracted Text (preview):")
+            preview_text = result.extracted_text[:300]
+            print(f"'{preview_text}{'...' if len(result.extracted_text) > 300 else ''}'")
+            
+            if len(result.extracted_text) > 300:
+                print(f"... and {len(result.extracted_text) - 300:,} more characters")
+                
+        print(f"\nCompleted at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
     else:
         print("Usage: python document_processor.py <file_path>")
+        print("Example: python document_processor.py sample.pdf")

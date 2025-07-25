@@ -167,11 +167,6 @@ class EmailParser:
             attachments = self._extract_msg_attachments(msg)
             metadata.total_attachments = len(attachments)
             
-            # Process image attachments with OCR if needed
-            ocr_text = self._process_image_attachments(attachments)
-            if ocr_text:
-                text_content += "\n" + ocr_text
-            
             # Create structured content
             structured_content = self._create_msg_structured_content(msg)
             
@@ -226,11 +221,6 @@ class EmailParser:
         attachments = self._extract_mailparser_attachments(mail)
         metadata.total_attachments = len(attachments)
         
-        # Process image attachments with OCR if needed
-        ocr_text = self._process_image_attachments(attachments)
-        if ocr_text:
-            text_content += "\n" + ocr_text
-        
         # Create structured content
         structured_content = self._create_mailparser_structured_content(mail)
         
@@ -278,11 +268,6 @@ class EmailParser:
         # Extract attachments  
         attachments = self._extract_email_attachments(msg)
         metadata.total_attachments = len(attachments)
-        
-        # Process image attachments with OCR if needed
-        ocr_text = self._process_image_attachments(attachments)
-        if ocr_text:
-            text_content += "\n" + ocr_text
             
         metadata.has_html_body = bool(html_content)
         metadata.has_text_body = bool(text_content)        # Create structured content
@@ -407,33 +392,7 @@ class EmailParser:
         
         return attachments
     
-    def _process_image_attachments(self, attachments: List[EmailAttachment]) -> str:
-        """Process image attachments with OCR if needed."""
-        ocr_text = ""
-        
-        for attachment in attachments:
-            if attachment.content_type.startswith('image/'):
-                try:
-                    from .ocr_parser import OCRParser
-                    
-                    # Save attachment temporarily for OCR
-                    temp_path = Path(f"temp_{attachment.filename}")
-                    temp_path.write_bytes(attachment.data)
-                    
-                    ocr_parser = OCRParser()
-                    result = ocr_parser.parse_file(temp_path)
-                    
-                    if result.success and result.text_content:
-                        ocr_text += f"\n[OCR from {attachment.filename}]\n{result.text_content}\n"
-                        logger.info(f"Extracted text from image attachment: {attachment.filename}")
-                    
-                    # Clean up temp file
-                    temp_path.unlink(missing_ok=True)
-                    
-                except Exception as e:
-                    logger.warning(f"Failed to process image attachment {attachment.filename}: {e}")
-        
-        return ocr_text
+
     
     def _extract_mailparser_attachments(self, mail) -> List[EmailAttachment]:
         """Extract attachments using mailparser."""
@@ -524,59 +483,7 @@ class EmailParser:
         
         return sum(confidence_factors) / len(confidence_factors)
     
-    def save_attachments(self, attachments: List[EmailAttachment], 
-                        output_dir: Path) -> List[Path]:
-        """
-        Save email attachments to disk.
-        
-        Args:
-            attachments: List of email attachments
-            output_dir: Directory to save attachments
-            
-        Returns:
-            List of paths to saved attachments
-        """
-        output_dir.mkdir(parents=True, exist_ok=True)
-        saved_paths = []
-        
-        for i, attachment in enumerate(attachments):
-            try:
-                if attachment.data:
-                    # Create safe filename
-                    safe_filename = self._make_safe_filename(attachment.filename)
-                    if not safe_filename:
-                        safe_filename = f"attachment_{i:03d}"
-                    
-                    output_path = output_dir / safe_filename
-                    
-                    # Handle duplicate filenames
-                    counter = 1
-                    original_path = output_path
-                    while output_path.exists():
-                        stem = original_path.stem
-                        suffix = original_path.suffix
-                        output_path = output_dir / f"{stem}_{counter}{suffix}"
-                        counter += 1
-                    
-                    with open(output_path, 'wb') as f:
-                        f.write(attachment.data)
-                    
-                    saved_paths.append(output_path)
-                    logger.debug(f"Saved attachment: {output_path}")
-            
-            except Exception as e:
-                logger.warning(f"Failed to save attachment {attachment.filename}: {e}")
-                continue
-        
-        logger.info(f"Saved {len(saved_paths)} attachments to {output_dir}")
-        return saved_paths
-    
-    def _make_safe_filename(self, filename: str) -> str:
-        """Make filename safe for filesystem."""
-        import re
-        # Remove or replace unsafe characters
-        safe_filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
-        return safe_filename.strip()
+
 
 
 def parse_email(file_path: Path) -> EmailParseResult:

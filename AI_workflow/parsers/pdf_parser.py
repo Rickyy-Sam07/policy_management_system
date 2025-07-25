@@ -347,59 +347,7 @@ class PDFParser:
         
         return overall_confidence, needs_ocr
     
-    def extract_images(self, file_path: Path) -> List[Dict[str, Any]]:
-        """
-        Extract images from PDF for potential OCR processing.
-        
-        Args:
-            file_path: Path to the PDF file
-            
-        Returns:
-            List of image metadata dictionaries
-        """
-        images = []
-        
-        if not self.pymupdf_available:
-            logger.warning("PyMuPDF not available for image extraction")
-            return images
-        
-        try:
-            doc = fitz.open(file_path)
-            
-            for page_num in range(len(doc)):
-                page = doc[page_num]
-                image_list = page.get_images()
-                
-                for img_index, img in enumerate(image_list):
-                    try:
-                        # Get image object
-                        xref = img[0]
-                        pix = fitz.Pixmap(doc, xref)
-                        
-                        if pix.n - pix.alpha < 4:  # GRAY or RGB
-                            image_data = {
-                                'page_number': page_num + 1,
-                                'image_index': img_index,
-                                'xref': xref,
-                                'width': pix.width,
-                                'height': pix.height,
-                                'colorspace': pix.colorspace.name if pix.colorspace else 'Unknown',
-                                'size_bytes': len(pix.tobytes())
-                            }
-                            images.append(image_data)
-                        
-                        pix = None  # Clean up
-                        
-                    except Exception as e:
-                        logger.warning(f"Failed to process image {img_index} on page {page_num + 1}: {e}")
-            
-            doc.close()
-            
-        except Exception as e:
-            logger.error(f"Failed to extract images from PDF: {e}")
-        
-        logger.info(f"Extracted {len(images)} images from PDF")
-        return images
+
     
     def render_pages_as_images(self, file_path: Path, dpi: int = 200) -> List[Dict[str, Any]]:
         """

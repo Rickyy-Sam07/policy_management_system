@@ -435,47 +435,7 @@ class OCRParser:
         logger.info(f"Batch OCR completed: {len(results)} results")
         return results
     
-    def extract_text_regions(self, image_path: Path, regions: List[Tuple[int, int, int, int]]) -> List[str]:
-        """
-        Extract text from specific regions of an image.
-        
-        Args:
-            image_path: Path to the image
-            regions: List of (x, y, width, height) tuples defining regions
-            
-        Returns:
-            List of extracted text strings, one per region
-        """
-        if not self.pil_available:
-            raise ImportError("PIL is required for region extraction")
-        
-        image = Image.open(image_path)
-        texts = []
-        
-        for i, (x, y, width, height) in enumerate(regions):
-            try:
-                # Crop the region
-                region = image.crop((x, y, x + width, y + height))
-                
-                # Apply OCR to the region
-                if self.paddleocr_available and self.paddle_ocr:
-                    results = self.paddle_ocr.ocr(np.array(region), cls=True)
-                    text = ""
-                    if results and results[0]:
-                        text = " ".join([line[1][0] for line in results[0] if line and len(line) >= 2])
-                elif self.tesseract_available:
-                    text = pytesseract.image_to_string(region, lang=self.lang).strip()
-                else:
-                    text = ""
-                
-                texts.append(text)
-                logger.debug(f"Region {i}: extracted {len(text)} characters")
-                
-            except Exception as e:
-                logger.warning(f"Failed to extract text from region {i}: {e}")
-                texts.append("")
-        
-        return texts
+
 
 
 def parse_image_ocr(file_path: Path, lang: str = 'en', preprocess: bool = True) -> OCRParseResult:

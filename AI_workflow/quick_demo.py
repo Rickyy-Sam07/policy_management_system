@@ -167,13 +167,13 @@ def format_file_size(size_bytes: int) -> str:
 
 def demonstrate_detection(file_paths: list):
     """Demonstrate document type detection."""
-    print("🎯 Document Type Detection Demo")
+    print("Document Type Detection Demo")
     print("=" * 60)
     print("This demo shows the core document detection logic")
     print("without requiring heavy dependencies.\n")
     
     for file_path in file_paths:
-        print(f"📄 Analyzing: {file_path}")
+        print(f"Analyzing: {file_path}")
         print("-" * 40)
         
         result = quick_detect_document_type(file_path)
@@ -184,7 +184,7 @@ def demonstrate_detection(file_paths: list):
         print(f"Detected Type: {result.detected_type.upper()}")
         print(f"Confidence: {result.confidence:.1%}")
         
-        print("\n🔧 Recommended Processing Steps:")
+        print("\nRecommended Processing Steps:")
         for i, step in enumerate(result.next_steps, 1):
             print(f"   {i}. {step}")
         
@@ -193,7 +193,7 @@ def demonstrate_detection(file_paths: list):
 
 def create_sample_files():
     """Create sample files for demonstration."""
-    print("📁 Creating sample files for demonstration...")
+    print("Creating sample files for demonstration...")
     
     sample_dir = Path("demo_files")
     sample_dir.mkdir(exist_ok=True)
@@ -252,13 +252,13 @@ result = process_document("document.pdf")
 > This demonstrates how the system handles different text formats.
 """)
     
-    print(f"✅ Created sample files in {sample_dir}")
+    print(f"Created sample files in {sample_dir}")
     return [str(sample_txt), str(sample_md)]
 
 
 def show_system_architecture():
     """Display system architecture overview."""
-    print("\n🏗️  System Architecture Overview")
+    print("\nSystem Architecture Overview")
     print("=" * 60)
     
     architecture = """
@@ -286,11 +286,11 @@ def show_system_architecture():
                                            └─────────────────────┘
 
 Processing Flow:
-1. 🔍 Detection: Multi-method file type identification
-2. 🚀 Routing: Intelligent parser selection
-3. 📄 Extraction: Specialized content processing
-4. 🧠 OCR: Automatic image text recognition
-5. 📊 Output: Structured results with metadata
+1. Detection: Multi-method file type identification
+2. Routing: Intelligent parser selection
+3. Extraction: Specialized content processing
+4. OCR: Automatic image text recognition
+5. Output: Structured results with metadata
 """
     print(architecture)
 
@@ -303,7 +303,7 @@ def main():
         demonstrate_detection(file_paths)
     else:
         # Create and use sample files
-        print("🚀 Document Processing System - Quick Demo")
+        print("Document Processing System - Quick Demo")
         print("=" * 60)
         print("No files provided. Creating sample files for demonstration...\n")
         
@@ -312,12 +312,12 @@ def main():
         
         show_system_architecture()
         
-        print("\n💡 To test with your own files:")
+        print("\nTo test with your own files:")
         print("   python quick_demo.py file1.pdf file2.docx file3.jpg")
-        print("\n🔧 For full functionality, run:")
+        print("\nFor full functionality, run:")
         print("   python setup.py")
         print("   python example_usage.py")
-        print("\n📚 Full documentation in README.md")
+        print("\nFull documentation in README.md")
 
 
 if __name__ == "__main__":

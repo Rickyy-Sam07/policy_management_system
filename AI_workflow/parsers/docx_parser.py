@@ -147,7 +147,7 @@ class DOCXParser:
                 error_message=str(e)
             )
     
-    def _extract_metadata(self, doc: DocumentType, file_path: Path) -> DOCXMetadata:
+    def _extract_metadata(self, doc: Document, file_path: Path) -> DOCXMetadata:
         """Extract metadata from DOCX document."""
         try:
             core_props = doc.core_properties
@@ -417,40 +417,7 @@ class DOCXParser:
         
         return False
     
-    def save_embedded_images(self, embedded_images: List[EmbeddedImage], 
-                           output_dir: Path) -> List[Path]:
-        """
-        Save embedded images to disk.
-        
-        Args:
-            embedded_images: List of embedded images
-            output_dir: Directory to save images
-            
-        Returns:
-            List of paths to saved images
-        """
-        output_dir.mkdir(parents=True, exist_ok=True)
-        saved_paths = []
-        
-        for i, image in enumerate(embedded_images):
-            try:
-                if image.data:
-                    # Create unique filename
-                    filename = f"{i:03d}_{image.name}"
-                    output_path = output_dir / filename
-                    
-                    with open(output_path, 'wb') as f:
-                        f.write(image.data)
-                    
-                    saved_paths.append(output_path)
-                    logger.debug(f"Saved embedded image: {output_path}")
-            
-            except Exception as e:
-                logger.warning(f"Failed to save embedded image {image.name}: {e}")
-                continue
-        
-        logger.info(f"Saved {len(saved_paths)} embedded images to {output_dir}")
-        return saved_paths
+
 
 
 def parse_docx(file_path: Path) -> DOCXParseResult:

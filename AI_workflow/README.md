@@ -2,7 +2,7 @@
 
 A comprehensive, optimized document processing system that intelligently detects document types and routes them to the appropriate parsing/cleaning logic using the most optimal tools.
 
-## 🎯 Features
+## Features
 
 - **Intelligent Document Detection**: Automatically detects file types using MIME types, magic numbers, and file extensions
 - **Multi-Format Support**: PDF, DOCX, emails (.eml, .msg), and images (.jpg, .png, .tiff, etc.)
@@ -12,7 +12,7 @@ A comprehensive, optimized document processing system that intelligently detects
 - **Comprehensive Metadata**: Detailed extraction metadata and confidence scoring
 - **Error Handling**: Robust error handling with fallback mechanisms
 
-## 📋 Supported Document Types
+## Supported Document Types
 
 | Type | Extensions | Features |
 |------|------------|----------|
@@ -21,7 +21,7 @@ A comprehensive, optimized document processing system that intelligently detects
 | **Email** | `.eml`, `.msg` | Header/body extraction, recursive attachment processing |
 | **Images** | `.jpg`, `.png`, `.tiff`, `.bmp`, `.gif` | Multi-engine OCR, preprocessing |
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -68,7 +68,7 @@ for result in results:
     print(f"{result.detection_result.metadata.filename}: {result.parsing_success}")
 ```
 
-## 🌐 Web API
+## Web API
 
 ### Start the API Server
 
@@ -97,7 +97,7 @@ curl -X POST "http://localhost:8000/batch" \
   -F "ocr_language=en"
 ```
 
-## 🔧 System Architecture
+## System Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
@@ -119,7 +119,7 @@ curl -X POST "http://localhost:8000/batch" \
                                               └─────────────────┘
 ```
 
-## 📊 Processing Pipeline
+## Processing Pipeline
 
 ### 1. Document Type Detection
 - **Primary**: MIME type detection using `python-magic`
@@ -139,7 +139,7 @@ curl -X POST "http://localhost:8000/batch" \
 - **Metadata Extraction**: Comprehensive document metadata
 - **Structured Output**: Consistent response format
 
-## 🎛️ Configuration
+## Configuration
 
 ### OCR Languages
 ```python
@@ -160,7 +160,7 @@ result = detector.detect_document_type(
 )
 ```
 
-## 📈 Performance Optimization
+## Performance Optimization
 
 ### Speed Optimizations
 - **Lazy Loading**: Parsers initialized only when needed
@@ -174,7 +174,7 @@ result = detector.detect_document_type(
 - **Image Preprocessing**: Enhanced OCR accuracy
 - **Error Recovery**: Graceful handling of parsing failures
 
-## 🔍 Example Outputs
+## Example Outputs
 
 ### Detection Result
 ```json
@@ -203,7 +203,7 @@ result = detector.detect_document_type(
 }
 ```
 
-## 🛠️ Dependencies
+## Dependencies
 
 ### Core Dependencies
 - **pdfplumber**: PDF text extraction
@@ -224,7 +224,7 @@ result = detector.detect_document_type(
 - **uvicorn**: ASGI server
 - **pydantic**: Data validation
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run basic example
@@ -240,7 +240,7 @@ python api.py
 curl http://localhost:8000/health
 ```
 
-## 📝 Logging
+## Logging
 
 The system uses structured logging with **loguru**:
 
@@ -255,7 +255,7 @@ from loguru import logger
 # - OCR confidence scores
 ```
 
-## 🔒 Security Considerations
+## Security Considerations
 
 - **File Validation**: MIME type verification
 - **Size Limits**: Configurable file size restrictions
@@ -263,7 +263,7 @@ from loguru import logger
 - **Input Sanitization**: Safe filename handling
 - **API Rate Limiting**: Prevent abuse (implement as needed)
 
-## 🚧 Future Enhancements
+## Future Enhancements
 
 - **Cloud Storage Integration**: S3, Azure Blob, Google Cloud
 - **Database Persistence**: PostgreSQL, MongoDB support
@@ -272,17 +272,17 @@ from loguru import logger
 - **Microservices**: Containerized deployment with Docker
 - **Real-time Processing**: WebSocket support for live updates
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Add tests for new functionality
 4. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-**🎯 Ready for Enterprise Use**: This system provides production-ready document processing capabilities with comprehensive error handling, logging, and API integration.
+**Ready for Enterprise Use**: This system provides production-ready document processing capabilities with comprehensive error handling, logging, and API integration.

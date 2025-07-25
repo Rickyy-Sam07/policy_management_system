@@ -94,18 +94,13 @@ async def root():
         "message": "Document Processing API",
         "version": "1.0.0",
         "endpoints": {
-            "process": "/process - Process single document",
-            "batch": "/batch - Process multiple documents",
-            "status": "/status/{job_id} - Check processing status",
-            "health": "/health - Health check",
-            "docs": "/docs - API documentation"
+            "process": "/process",
+            "batch": "/batch",
+            "status": "/status/{job_id}",
+            "health": "/health",
+            "docs": "/docs"
         },
-        "supported_formats": [
-            "PDF (.pdf)",
-            "Word Documents (.docx, .doc)",
-            "Email Files (.eml, .msg)",
-            "Images (.jpg, .jpeg, .png, .tiff, .bmp, .gif)"
-        ]
+        "supported_formats": ["pdf", "docx", "doc", "eml", "msg", "jpg", "jpeg", "png", "tiff", "bmp", "gif"]
     }
 
 
@@ -276,18 +271,7 @@ async def get_batch_results(job_id: str):
     )
 
 
-@app.delete("/job/{job_id}")
-async def delete_job(job_id: str):
-    """
-    Delete a job and its results.
-    
-    - **job_id**: Job ID to delete
-    """
-    if job_id not in job_storage:
-        raise HTTPException(status_code=404, detail="Job not found")
-    
-    del job_storage[job_id]
-    return {"message": f"Job {job_id} deleted successfully"}
+
 
 
 async def process_batch_background(job_id: str, files: List[UploadFile], ocr_language: str):
@@ -361,21 +345,7 @@ async def process_batch_background(job_id: str, files: List[UploadFile], ocr_lan
         job_storage[job_id]["message"] = f"Batch processing failed: {str(e)}"
 
 
-@app.get("/stats")
-async def get_api_stats():
-    """Get API usage statistics."""
-    total_jobs = len(job_storage)
-    completed_jobs = sum(1 for job in job_storage.values() if job["status"] == "completed")
-    failed_jobs = sum(1 for job in job_storage.values() if job["status"] == "failed")
-    processing_jobs = sum(1 for job in job_storage.values() if job["status"] == "processing")
-    
-    return {
-        "total_jobs": total_jobs,
-        "completed_jobs": completed_jobs,
-        "failed_jobs": failed_jobs,
-        "processing_jobs": processing_jobs,
-        "success_rate": (completed_jobs / total_jobs * 100) if total_jobs > 0 else 0
-    }
+
 
 
 if __name__ == "__main__":
