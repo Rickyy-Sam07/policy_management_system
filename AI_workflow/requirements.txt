@@ -1,0 +1,29 @@
+# Core dependencies for document processing
+python-magic
+python-magic-bin  # For Windows compatibility
+pdfplumber
+PyMuPDF
+python-docx
+Pillow
+paddleocr
+mail-parser
+filetype
+pydantic
+loguru
+typing-extensions
+
+# API dependencies
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Optional for enhanced functionality
+pytesseract
+opencv-python
+numpy
+extract-msg
+
+# Development dependencies (optional)
+pytest
+black
+flake8

@@ -1,0 +1,25 @@
+Sample Document for Processing
+=============================
+
+This is a sample text document that demonstrates the document 
+processing system's capabilities.
+
+Key Features:
+• Intelligent document type detection
+• Multi-format support (PDF, DOCX, emails, images)
+• OCR capabilities for image-based content
+• Metadata extraction and confidence scoring
+• Batch processing capabilities
+
+The system can process various document types and extract
+meaningful content for further analysis or indexing.
+
+Processing Pipeline:
+1. File type detection using MIME types and signatures
+2. Route to appropriate parser based on detected type
+3. Extract text content using specialized tools
+4. Apply OCR if needed for image-based documents
+5. Return structured results with metadata
+
+This approach ensures optimal processing for each document type
+while maintaining high accuracy and performance.
