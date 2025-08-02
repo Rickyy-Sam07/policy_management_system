@@ -1,0 +1,23 @@
+{
+  "public_endpoint": "https://47b874c3fc3f.ngrok-free.app/hackrx/run",
+  "method": "POST",
+  "authentication": "Bearer rtx3050-advanced-token",
+  "content_type": "application/json",
+  "request_example": {
+    "documents": "https://hackrx.blob.core.windows.net/assets/policy.pdf?sv=2023-01-03&st=2025-07-04T09%3A11%3A24Z&se=2027-07-05T09%3A11%3A00Z&sr=b&sp=r&sig=N4a9OU0w0QXO6AOIBiu4bpl7AXvEZogeT%2FjUHNO7HzQ%3D",
+    "questions": [
+      "What is the grace period for premium payment?",
+      "What is the waiting period for pre-existing diseases?",
+      "Does this policy cover maternity expenses?"
+    ]
+  },
+  "expected_response": {
+    "answers": [
+      "Answer to question 1",
+      "Answer to question 2",
+      "Answer to question 3"
+    ]
+  },
+  "performance": "~1.09s per question",
+  "status": "ready_for_testing"
+}
