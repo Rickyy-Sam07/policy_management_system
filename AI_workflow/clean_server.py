@@ -43,7 +43,7 @@ async def startup_event():
     startup_start = time.time()
     
     # Initialize RAG system
-    api_key = os.getenv('GEMINI_API_KEY', 'AIzaSyCHgFhB-3WJeN1ld0MK2a0j8geEMO56anw')
+    api_key = os.getenv('GEMINI_API_KEY', 'your gemini api key')
     logger.info("📦 Initializing RAG system...")
     rag_system = create_rag_system(api_key)
     
