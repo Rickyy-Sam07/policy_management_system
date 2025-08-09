@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Clean RAG System", version="1.0.0")
 
 # Initialize RAG system
-api_key = os.getenv('GEMINI_API_KEY', 'AIzaSyCHgFhB-3WJeN1ld0MK2a0j8geEMO56anw')
+api_key = os.getenv('GEMINI_API_KEY', 'your gemini api')
 rag_system = create_rag_system(api_key)
 
 class BatchRequest(BaseModel):
