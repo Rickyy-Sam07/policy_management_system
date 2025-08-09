@@ -1,0 +1,27 @@
+# Super RAG System Requirements
+# Core ML and NLP dependencies
+torch>=2.0.0
+transformers>=4.30.0
+sentence-transformers>=2.2.2
+faiss-cpu>=1.7.4
+google-generativeai>=0.3.0
+nltk>=3.8.1
+numpy>=1.24.0
+tqdm>=4.65.0
+
+# PDF processing
+PyMuPDF>=1.23.0
+
+# Search and retrieval
+rank-bm25>=0.2.2
+
+# Web scraping and requests
+requests>=2.31.0
+
+# FastAPI and web server
+fastapi>=0.104.0
+uvicorn>=0.24.0
+aiohttp>=3.9.0
+
+# Additional utilities
+python-dotenv>=1.0.0
